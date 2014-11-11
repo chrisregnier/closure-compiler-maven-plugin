@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -54,16 +55,21 @@ public class ClosureCompilerMojo extends AbstractMojo {
 			options = new PluginOptions();
 		}
 		
+		Compiler.setLoggingLevel(Level.OFF);
+		
 		CompilerOptions compilerOptions = options.getCompilerOptions();
 		
 		List<SourceFile> externs = getExterns();
 		List<SourceFile> sources = getSources();
 		
-		//TODO: print out compiler options?
-		
 		if (options.forceRecompile || isStale()) {
+			log.info("Compiling " + sources.size() + " file(s) with " + externs.size() + " extern(s)");
+			
 			CompilationLevel compilationLevel = getCompilationLevel(options.compilationLevel);
 			compilationLevel.setOptionsForCompilationLevel(compilerOptions);
+			if (options.debug) {
+				compilationLevel.setDebugOptionsForCompilationLevel(compilerOptions);
+			}
 
 			WarningLevel warningLevel = getWarningLevel(options.warningLevel);
 			warningLevel.setOptionsForWarningLevel(compilerOptions);
@@ -88,12 +94,8 @@ public class ClosureCompilerMojo extends AbstractMojo {
 	        
 	        if (result.success) {
 	        	try {
-	        		if (options.outputFile.mkdirs()) {
-	        			Files.write(compiler.toSource(), options.outputFile, Charsets.UTF_8);
-	        		}
-	        		else {
-	        			throw new MojoFailureException("Couldn't create the output directories for: '" + options.outputFile.getAbsolutePath() + "'");
-	        		}
+	        		options.outputFile.getParentFile().mkdirs();
+        			Files.write(compiler.toSource(), options.outputFile, Charsets.UTF_8);
 	        	}
 	        	catch (IOException e) {
 	        		throw new MojoFailureException("Couldn't write output file: '" + options.outputFile.getAbsolutePath() + "'", e);
@@ -126,18 +128,34 @@ public class ClosureCompilerMojo extends AbstractMojo {
 			}
 		}
 		
-		FileSetManager fsManager = new FileSetManager();
+		FileSetManager fsManager = new FileSetManager(log, true);
 		for (FileSet fileset : options.externs) {
-			String[] paths = fsManager.getIncludedFiles(fileset);
-			for (String path : paths) {
-				File file = new File(path);
-				if (file.exists()) {
-					log.info("Adding extern path '" + file.getAbsolutePath() + "'");
-					externs.add(SourceFile.fromFile(path));
+			String[] paths;
+			if (options.fileOrderMatters) {
+				//if file order matters then we only use the direct included files in the exact order
+				paths = fileset.getIncludesArray();
+				String[] excludes = fileset.getExcludesArray();
+				if (excludes != null && excludes.length > 0) {
+					throw new MojoFailureException("In 'fileOrderMatters' mode you cannot use excludes");
 				}
-				else {
-					log.warn("Ignoring extern path '" + file.getAbsolutePath() + "' because it doesn't exist.");
+			}
+			else {
+				paths = fsManager.getIncludedFiles(fileset);
+			}
+			if (paths != null && paths.length > 0) {
+				for (String path : paths) {
+					File file = new File(fileset.getDirectory(), path);
+					if (file.exists()) {
+						log.info("Adding extern path '" + file.getAbsolutePath() + "'");
+						externs.add(SourceFile.fromFile(file));
+					}
+					else {
+						log.warn("Ignoring extern path '" + file.getAbsolutePath() + "' because it doesn't exist.");
+					}
 				}
+			}
+			else {
+				log.warn("Fileset for directory '" + fileset.getDirectory() + "' doesn't contain any included files.");
 			}
 		}
 		
@@ -148,18 +166,35 @@ public class ClosureCompilerMojo extends AbstractMojo {
 		Log log = getLog();
 		List<SourceFile> sources = new ArrayList<SourceFile>();
 		
-		FileSetManager fsManager = new FileSetManager();
-		for (FileSet fileset : options.externs) {
-			String[] paths = fsManager.getIncludedFiles(fileset);
-			for (String path : paths) {
-				File file = new File(path);
-				if (file.exists()) {
-					log.info("Adding source path '" + file.getAbsolutePath() + "'");
-					sources.add(SourceFile.fromFile(path));
+		FileSetManager fsManager = new FileSetManager(log, true);
+		for (FileSet fileset : options.sources) {
+			String[] paths;
+			
+			if (options.fileOrderMatters) {
+				//if file order matters then we only use the direct included files in the exact order
+				paths = fileset.getIncludesArray();
+				String[] excludes = fileset.getExcludesArray();
+				if (excludes != null && excludes.length > 0) {
+					throw new MojoFailureException("In 'fileOrderMatters' mode you cannot use excludes");
 				}
-				else {
-					log.warn("Ignoring source path '" + file.getAbsolutePath() + "' because it doesn't exist.");
+			}
+			else {
+				paths = fsManager.getIncludedFiles(fileset);
+			}
+			if (paths != null && paths.length > 0) {
+				for (String path : paths) {
+					File file = new File(fileset.getDirectory(), path);
+					if (file.exists()) {
+						log.info("Adding source path '" + file.getAbsolutePath() + "'");
+						sources.add(SourceFile.fromFile(file));
+					}
+					else {
+						log.warn("Ignoring source path '" + file.getAbsolutePath() + "' because it doesn't exist.");
+					}
 				}
+			}
+			else {
+				log.warn("Fileset for directory '" + fileset.getDirectory() + "' doesn't contain any included files.");
 			}
 		}
 		

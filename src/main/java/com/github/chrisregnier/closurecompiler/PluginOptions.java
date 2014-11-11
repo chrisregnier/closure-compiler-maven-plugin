@@ -23,9 +23,12 @@ public class PluginOptions {
 	public CompilerOptions getCompilerOptions() throws MojoFailureException {
 		if (compilerOptions == null) {
 			compilerOptions = new CompilerOptions();
-			compilerOptions.setPrettyPrint(prettyPrint);
-			setLanguageIn(languageIn);
-			setLanguageOut(languageOut);
+			compilerOptions.prettyPrint = prettyPrint;
+			if (languageIn != null)
+				configureLanguageIn(languageIn);
+			if (languageOut != null)
+				configureLanguageOut(languageOut);
+			compilerOptions.setTrustedStrings(true);
 		}
 		
 		return compilerOptions;
@@ -34,13 +37,13 @@ public class PluginOptions {
 	/**
 	 * @throws MojoFailureException 
 	 */
-	public void setLanguageIn(String languageIn) throws MojoFailureException {
+	public void configureLanguageIn(String languageIn) throws MojoFailureException {
 		LanguageMode mode;
 		try {
-			mode = LanguageMode.valueOf(languageIn);
+			mode = LanguageMode.fromString(languageIn);
 			compilerOptions.setLanguageIn(mode);
 		}
-		catch (IllegalArgumentException e) {
+		catch (Exception e) {
 			throw new MojoFailureException("Invalid Language In. Possible values: [" + Arrays.asList(LanguageMode.values()) + "]" , e);
 		}
 	}
@@ -48,13 +51,13 @@ public class PluginOptions {
 	/**
 	 * @throws MojoFailureException 
 	 */
-	public void setLanguageOut(String languageOut) throws MojoFailureException {
+	public void configureLanguageOut(String languageOut) throws MojoFailureException {
 		LanguageMode mode;
 		try {
-			mode = LanguageMode.valueOf(languageOut);
+			mode = LanguageMode.fromString(languageOut);
 			compilerOptions.setLanguageOut(mode);
 		}
-		catch (IllegalArgumentException e) {
+		catch (Exception e) {
 			throw new MojoFailureException("Invalid Language Out. Possible values: [" + Arrays.asList(LanguageMode.values()) + "]" , e);
 		}
 	}
@@ -119,6 +122,20 @@ public class PluginOptions {
 	 */
 	@Parameter(defaultValue="true")
 	public boolean failOnErrors;
+	
+	/**
+	 * 
+	 */
+	@Parameter(defaultValue="false")
+	public boolean debug;
+	
+	/**
+	 * Turns on 'file order matters' mode which will add extern and source includes in the exact
+	 * order that they're specified in filesets. This mode only allows includes, and does not
+	 * allow excludes or glob patterns.
+	 */
+	@Parameter(defaultValue="false")
+	public boolean fileOrderMatters;
 	
 	
 	/**
