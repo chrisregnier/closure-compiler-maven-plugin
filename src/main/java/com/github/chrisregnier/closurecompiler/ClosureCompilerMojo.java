@@ -58,6 +58,9 @@ public class ClosureCompilerMojo extends AbstractMojo {
 		Compiler.setLoggingLevel(Level.OFF);
 		
 		CompilerOptions compilerOptions = options.getCompilerOptions();
+		if (options.skip) {
+			return;
+		}
 		
 		List<SourceFile> externs = getExterns();
 		List<SourceFile> sources = getSources();

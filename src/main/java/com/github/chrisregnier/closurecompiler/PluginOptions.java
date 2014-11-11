@@ -137,6 +137,12 @@ public class PluginOptions {
 	@Parameter(defaultValue="false")
 	public boolean fileOrderMatters;
 	
+	/**
+	 * Allows you to skip any processing by this plugin.
+	 */
+	@Parameter(defaultValue="false")
+	public boolean skip;
+
 	
 	/**
 	 * A list of filesets to be used for externs.
