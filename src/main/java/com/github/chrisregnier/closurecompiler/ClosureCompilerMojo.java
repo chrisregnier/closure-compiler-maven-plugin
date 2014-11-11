@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.MessageFormatter;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.WarningLevel;
@@ -75,16 +75,12 @@ public class ClosureCompilerMojo extends AbstractMojo {
 			warningLevel.setOptionsForWarningLevel(compilerOptions);
 			
 	        Compiler compiler = new Compiler();
+	        MessageFormatter formatter = compilerOptions.errorFormat.toFormatter(compiler, false);
+	        MavenErrorManager errorManager = new MavenErrorManager(formatter, log);
+	        compiler.setErrorManager(errorManager);
+	        
 	        Result result = compiler.compile(externs, sources, compilerOptions);
 		
-            for (JSError warning : result.warnings) {
-                log.warn(warning.toString());
-            }
-
-            for (JSError error : result.errors) {
-                log.error(error.toString());
-            }
-            
             if (options.failOnWarnings && result.warnings.length > 0) {
             	throw new MojoFailureException("Failing on " + result.warnings.length + " warnings.");
             }
