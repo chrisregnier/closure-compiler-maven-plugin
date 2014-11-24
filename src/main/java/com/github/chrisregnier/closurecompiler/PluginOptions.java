@@ -105,6 +105,14 @@ public class PluginOptions {
 	@Parameter(defaultValue="${project.build.directory}/$project.artifactId}-${project.version}-min.js/", required=true )
 	public File outputFile;
 	
+	
+	/**
+	 * 
+	 */
+	@Parameter(defaultValue="${project.build.directory}/$project.artifactId}-${project.version}-min.js/", required=true )
+	public File modulesOutputDirectory;
+	
+	
 	/**
 	 * 
 	 */
@@ -155,5 +163,11 @@ public class PluginOptions {
 	 */
 	@Parameter
 	public List<FileSet> sources;
+	
+	/**
+	 * A list of modules to be used for sources.
+	 */
+	@Parameter
+	public List<ModuleOptions> modules;
 	
 }

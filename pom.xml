@@ -4,7 +4,7 @@
 
 	<groupId>com.github.chrisregnier.buildtools</groupId>
 	<artifactId>closure-compiler-maven-plugin</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Maven Closure Plugin</name>
