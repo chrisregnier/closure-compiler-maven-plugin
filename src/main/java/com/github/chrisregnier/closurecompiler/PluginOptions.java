@@ -10,6 +10,9 @@ import org.apache.maven.shared.model.fileset.FileSet;
 
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
+import com.google.javascript.jscomp.PropertyRenamingPolicy;
+import com.google.javascript.jscomp.VariableRenamingPolicy;
 
 /**
  * 
@@ -18,26 +21,57 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public class PluginOptions {
 
-	private CompilerOptions compilerOptions = null;
-	
-	public CompilerOptions getCompilerOptions() throws MojoFailureException {
-		if (compilerOptions == null) {
-			compilerOptions = new CompilerOptions();
-			compilerOptions.prettyPrint = prettyPrint;
-			if (languageIn != null)
-				configureLanguageIn(languageIn);
-			if (languageOut != null)
-				configureLanguageOut(languageOut);
-			compilerOptions.setTrustedStrings(true);
-		}
-		
-		return compilerOptions;
+	public void setOptionsForPlugin(CompilerOptions compilerOptions) throws MojoFailureException {
+		compilerOptions.prettyPrint = prettyPrint;
+		if (languageIn != null)
+			configureLanguageIn(compilerOptions, languageIn);
+		if (languageOut != null)
+			configureLanguageOut(compilerOptions, languageOut);
+		compilerOptions.setTrustedStrings(true);
+		if (variableRenamingPolicy != null)
+			compilerOptions.setVariableRenaming(variableRenamingPolicy);
+		if (propertyRenamingPolicy != null)
+			compilerOptions.setPropertyRenaming(propertyRenamingPolicy);
+	    
+		//renaming properties
+		if (aggressiveRenaming != null)
+			compilerOptions.setAggressiveRenaming(aggressiveRenaming);
+		if (propertyAffinity != null)
+			compilerOptions.setPropertyAffinity(propertyAffinity);
+		if (labelRenaming != null)
+			compilerOptions.labelRenaming = labelRenaming;
+		if (generatePseudoNames != null)
+			compilerOptions.generatePseudoNames = generatePseudoNames;
+		if (shadowVariables != null)
+			compilerOptions.setShadowVariables(shadowVariables);
+		if (preferStableNames != null)
+			compilerOptions.setPreferStableNames(preferStableNames);
+		if (renamePrefix != null)
+			compilerOptions.renamePrefix = renamePrefix;
+		if (aliasKeywords != null)
+			compilerOptions.aliasKeywords = aliasKeywords;
+		if (collapseProperties != null)
+			compilerOptions.collapseProperties = collapseProperties;
+		if (collapsePropertiesOnExternTypes != null)
+			compilerOptions.setCollapsePropertiesOnExternTypes(collapsePropertiesOnExternTypes);
+		if (collapseObjectLiterals != null)
+			compilerOptions.setCollapseObjectLiterals(collapseObjectLiterals);
+		if (devirtualizePrototypeMethods != null)
+			compilerOptions.devirtualizePrototypeMethods = devirtualizePrototypeMethods;
+		if (disambiguateProperties != null)
+			compilerOptions.disambiguateProperties = disambiguateProperties;
+		if (ambiguateProperties != null)
+			compilerOptions.ambiguateProperties = ambiguateProperties;
+		if (anonymousFunctionNaming != null)
+			compilerOptions.anonymousFunctionNaming = anonymousFunctionNaming;
+		if (exportTestFunctions != null)
+			compilerOptions.exportTestFunctions = exportTestFunctions;
 	}
 	
 	/**
 	 * @throws MojoFailureException 
 	 */
-	public void configureLanguageIn(String languageIn) throws MojoFailureException {
+	public void configureLanguageIn(CompilerOptions compilerOptions, String languageIn) throws MojoFailureException {
 		LanguageMode mode;
 		try {
 			mode = LanguageMode.fromString(languageIn);
@@ -51,7 +85,7 @@ public class PluginOptions {
 	/**
 	 * @throws MojoFailureException 
 	 */
-	public void configureLanguageOut(String languageOut) throws MojoFailureException {
+	public void configureLanguageOut(CompilerOptions compilerOptions, String languageOut) throws MojoFailureException {
 		LanguageMode mode;
 		try {
 			mode = LanguageMode.fromString(languageOut);
@@ -169,5 +203,83 @@ public class PluginOptions {
 	 */
 	@Parameter
 	public List<ModuleOptions> modules;
+
+	//---------- Renaming related properties
+	
+	/**
+	 * Renaming policies that can be used
+	 * {@link VariableRenamingPolicy#ALL}
+	 * {@link VariableRenamingPolicy#LOCAL}
+	 * {@link VariableRenamingPolicy#UNSPECIFIED}
+	 * {@link VariableRenamingPolicy#OFF}
+	 */
+	@Parameter
+	public VariableRenamingPolicy variableRenamingPolicy;
+	
+	/**
+	 * Renaming policies that can be used
+	 * {@link PropertyRenamingPolicy#AGGRESSIVE_HEURISTIC}
+	 * {@link PropertyRenamingPolicy#ALL_UNQUOTED}
+	 * {@link PropertyRenamingPolicy#HEURISTIC}
+	 * {@link PropertyRenamingPolicy#UNSPECIFIED}
+	 * {@link PropertyRenamingPolicy#OFF}
+	 */
+	@Parameter
+	public PropertyRenamingPolicy propertyRenamingPolicy;
+	
+
+	@Parameter
+	public Boolean aggressiveRenaming;
+
+	@Parameter
+	public Boolean propertyAffinity;
+	
+	@Parameter
+	public Boolean labelRenaming;
+	
+	@Parameter
+	public Boolean generatePseudoNames;
+	
+	@Parameter
+	public Boolean shadowVariables;
+	
+	@Parameter
+	public Boolean preferStableNames;
+	
+	@Parameter
+	public String renamePrefix;
+
+	@Parameter
+	public Boolean aliasKeywords
+	;
+	@Parameter
+	public Boolean collapseProperties;
+	
+	@Parameter
+	public Boolean collapsePropertiesOnExternTypes;
+
+	@Parameter
+	public Boolean collapseObjectLiterals;
+	
+	@Parameter
+	public Boolean devirtualizePrototypeMethods;
+	
+	@Parameter
+	public Boolean disambiguateProperties;
+	
+	@Parameter
+	public Boolean ambiguateProperties;
+
+	/**
+	 * Possible values are:
+	 * {@link AnonymousFunctionNamingPolicy#MAPPED}
+	 * {@link AnonymousFunctionNamingPolicy#UNMAPPED}
+	 * {@link AnonymousFunctionNamingPolicy#OFF}
+	 */
+	@Parameter
+	public AnonymousFunctionNamingPolicy anonymousFunctionNaming;
+	
+	@Parameter
+	public Boolean exportTestFunctions;
 	
 }

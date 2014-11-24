@@ -64,7 +64,6 @@ public class ClosureCompilerMojo extends AbstractMojo {
 		
 		Compiler.setLoggingLevel(Level.OFF);
 		
-		CompilerOptions compilerOptions = options.getCompilerOptions();
 		if (options.skip) {
 			return;
 		}
@@ -74,6 +73,7 @@ public class ClosureCompilerMojo extends AbstractMojo {
 		List<JSModule> modules = getModules();
 		
 		if (options.forceRecompile || isStale()) {
+			CompilerOptions compilerOptions = new CompilerOptions();
 			
 			CompilationLevel compilationLevel = getCompilationLevel(options.compilationLevel);
 			compilationLevel.setOptionsForCompilationLevel(compilerOptions);
@@ -83,6 +83,9 @@ public class ClosureCompilerMojo extends AbstractMojo {
 
 			WarningLevel warningLevel = getWarningLevel(options.warningLevel);
 			warningLevel.setOptionsForWarningLevel(compilerOptions);
+
+			//override any of the options with ones set in the configuration
+			options.setOptionsForPlugin(compilerOptions);
 			
 	        Compiler compiler = new Compiler();
 	        MessageFormatter formatter = compilerOptions.errorFormat.toFormatter(compiler, false);
@@ -110,10 +113,10 @@ public class ClosureCompilerMojo extends AbstractMojo {
 	        
 		
             if (options.failOnWarnings && result.warnings.length > 0) {
-            	throw new MojoFailureException("Failing on " + result.warnings.length + " warnings.");
+            	throw new MojoFailureException("Failing on " + result.warnings.length + " warnings during closure compiler.");
             }
             if (options.failOnErrors && result.errors.length > 0) {
-            	throw new MojoFailureException("Failing on " + result.errors.length + " errors.");
+            	throw new MojoFailureException("Failing on " + result.errors.length + " errors during closure compiler.");
             }
 	        
 	        if (result.success) {
